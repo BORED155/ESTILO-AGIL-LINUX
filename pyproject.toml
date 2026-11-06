@@ -1,0 +1,23 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "temasapp"
+version = "1.0.0"
+description = "Instala, previsualiza y aplica temas de cursores e iconos en Linux de forma sencilla"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = ["PySide6>=6.6"]
+
+[project.optional-dependencies]
+dev = ["pytest>=8"]
+
+[project.gui-scripts]
+temasapp = "temasapp.__main__:main"
+
+[tool.setuptools.packages.find]
+include = ["temasapp*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
