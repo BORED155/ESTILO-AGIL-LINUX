@@ -7,19 +7,20 @@ import tempfile
 import threading
 from pathlib import Path
 
-from PySide6.QtCore import QObject, Qt, QTimer, QUrl, Signal
-from PySide6.QtGui import QColor, QDesktopServices, QKeySequence, QShortcut
+from PySide6.QtCore import QObject, Qt, QTimer, Signal
+from PySide6.QtGui import QColor, QKeySequence, QShortcut
 from PySide6.QtWidgets import (QAbstractItemView, QCheckBox, QComboBox, QDialog, QDialogButtonBox, QFileDialog,
                                QFrame, QHBoxLayout, QLabel, QLineEdit, QListWidget, QListWidgetItem, QMainWindow,
                                QMenu, QMessageBox, QProgressBar, QPushButton, QSplitter, QTabWidget, QToolButton,
                                QTreeWidget, QTreeWidgetItem, QVBoxLayout, QWidget)
 
 from .. import __version__, archivos
-from ..escritorio import (NOMBRES_ENTORNO, renombrar_clave, renombrar_tema, Escritorio, desinstalar, es_del_usuario, instalar, instalado_igual, ocultar, ocultos,
+from ..escritorio import (NOMBRES_ENTORNO, entorno_sistema, renombrar_clave, renombrar_tema, Escritorio, desinstalar, es_del_usuario, instalar, instalado_igual, ocultar, ocultos,
                           favoritos, marcar_favorito)
 from .. import fondos as mod_fondos
 from ..fondos import Fondo
 from ..temas import Tema, agrupar, buscar_temas, temas_instalados
+from .navegador import abrir_externo
 from .vistas import Interruptor, PanelVista
 
 TAMANOS = [24, 28, 32, 36, 40, 48, 56, 64, 72, 96]
@@ -141,12 +142,12 @@ def mostrar_en_carpeta(ruta: Path) -> None:
             r = subprocess.run(["gdbus", "call", "--session", "--dest", "org.freedesktop.FileManager1",
                                 "--object-path", "/org/freedesktop/FileManager1",
                                 "--method", "org.freedesktop.FileManager1.ShowItems", f"['{ruta.as_uri()}']", ""],
-                               capture_output=True, timeout=10)
+                               capture_output=True, timeout=10, env=entorno_sistema())
             if r.returncode == 0:
                 return
         except (OSError, subprocess.SubprocessError):
             pass
-    QDesktopServices.openUrl(QUrl.fromLocalFile(str(ruta.parent)))
+    abrir_externo(ruta.parent.as_uri())
 
 
 class DialogoArchivos(QDialog):
@@ -399,7 +400,7 @@ class VentanaPrincipal(QMainWindow):
 
     # --- páginas de temas ---------------------------------------------------------
     def _menu_sitios(self) -> QMenu:
-        from .navegador import SITIOS, abrir_externo, hay_navegador_integrado
+        from .navegador import SITIOS, hay_navegador_integrado
 
         menu = QMenu(self)
         integrado = hay_navegador_integrado()

@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "temasapp"
-version = "1.0.0"
+version = "1.0.1"
 description = "Instala, previsualiza y aplica temas de cursores e iconos en Linux de forma sencilla"
 readme = "README.md"
 requires-python = ">=3.10"

@@ -3,11 +3,14 @@
 from __future__ import annotations
 
 import re
+import subprocess
 from pathlib import Path
 
 from PySide6.QtCore import Qt, QUrl
 from PySide6.QtGui import QDesktopServices
 from PySide6.QtWidgets import QDialog, QHBoxLayout, QLabel, QLineEdit, QPushButton, QToolButton, QVBoxLayout
+
+from ..escritorio import entorno_sistema
 
 # (sección, [(texto, dirección)])
 SITIOS: list[tuple[str, list[tuple[str, str]]]] = [
@@ -38,7 +41,11 @@ def es_pagina_de_tema(url: str) -> bool:
 
 
 def abrir_externo(url: str) -> None:
-    QDesktopServices.openUrl(QUrl(url))
+    try:
+        subprocess.Popen(["xdg-open", url], env=entorno_sistema(), start_new_session=True,
+                         stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    except OSError:
+        QDesktopServices.openUrl(QUrl(url))
 
 
 def hay_navegador_integrado() -> bool:

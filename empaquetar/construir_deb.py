@@ -23,6 +23,10 @@ SIN_USAR = ["tkinter", "pytest", "PySide6.Qt3DCore", "PySide6.Qt3DRender", "PySi
             "PySide6.QtDataVisualization", "PySide6.QtBluetooth", "PySide6.QtSensors", "PySide6.QtSerialPort",
             "PySide6.QtDesigner", "PySide6.QtSql", "PySide6.QtTest", "PySide6.QtGraphs"]
 
+# deben ser las del sistema: las del paquete (más viejas) impiden cargar los controladores gráficos y el
+# navegador integrado cierra todo el programa con «Could not initialize GLX»
+DEL_SISTEMA = ["libstdc++.so.6", "libgcc_s.so.1", "libgbm.so.1"]
+
 ESCRITORIO = """[Desktop Entry]
 Type=Application
 Version=1.0
@@ -59,6 +63,8 @@ def main() -> int:
         args += ["--exclude-module", m]
     args.append(str(RAIZ / "empaquetar" / "lanzador.py"))
     subprocess.run(args, check=True)
+    for lib in DEL_SISTEMA:
+        (dist / NOMBRE / "_internal" / lib).unlink(missing_ok=True)
 
     paquete = build / "deb"
     shutil.rmtree(paquete, ignore_errors=True)
@@ -81,7 +87,7 @@ Section: utils
 Priority: optional
 Architecture: amd64
 Installed-Size: {tamano_kb}
-Depends: libc6 (>= 2.35), libxcb-cursor0, libxkbcommon-x11-0, libegl1, libgl1, libfontconfig1, libdbus-1-3, xdg-utils, libglib2.0-bin, libnss3, libxcomposite1, libxdamage1, libxrandr2, libxtst6, libxkbfile1
+Depends: libc6 (>= 2.35), libstdc++6, libgcc-s1, libgbm1, libxcb-cursor0, libxkbcommon-x11-0, libegl1, libgl1, libfontconfig1, libdbus-1-3, xdg-utils, libglib2.0-bin, libnss3, libxcomposite1, libxdamage1, libxrandr2, libxtst6, libxkbfile1
 Recommends: gtk-update-icon-cache
 Maintainer: Leninsodu <198639107+Leninsodu@users.noreply.github.com>
 Description: Estilo Ágil - cursores, iconos y fondos de pantalla

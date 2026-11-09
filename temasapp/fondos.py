@@ -9,6 +9,8 @@ import subprocess
 from dataclasses import dataclass
 from pathlib import Path
 
+from .escritorio import entorno_sistema
+
 EXT_IMAGEN = (".jpg", ".jpeg", ".png", ".webp", ".bmp", ".svg", ".jxl", ".avif")
 LADO_MAYOR_MIN = 1000      # una imagen más chica no se considera fondo de pantalla (iconos, miniaturas…)
 LADO_MENOR_MIN = 500
@@ -152,7 +154,7 @@ def desinstalar(fondo: Fondo) -> bool:
     if not es_del_usuario(fondo):
         raise PermissionError("Solo se pueden eliminar los fondos de su carpeta personal.")
     if shutil.which("gio"):
-        r = subprocess.run(["gio", "trash", str(fondo.ruta)], capture_output=True, timeout=60)
+        r = subprocess.run(["gio", "trash", str(fondo.ruta)], capture_output=True, timeout=60, env=entorno_sistema())
         if r.returncode == 0 and not fondo.ruta.exists():
             return True
     fondo.ruta.unlink()

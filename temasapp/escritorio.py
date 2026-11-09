@@ -7,6 +7,7 @@ import re
 import os
 import shutil
 import subprocess
+import sys
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Callable
@@ -16,8 +17,21 @@ from .temas import Tema, tema_en
 Ejecutor = Callable[[list[str]], str]   # ejecuta un comando y devuelve su salida
 
 
+def entorno_sistema() -> dict[str, str]:
+    """Entorno para lanzar programas del sistema. En el .deb, LD_LIBRARY_PATH apunta a las librerías del paquete y
+    con ellas gsettings no carga dconf (guarda en otro lado, sin avisar) y xdg-open no abre nada."""
+    env = dict(os.environ)
+    if getattr(sys, "frozen", False):
+        original = env.pop("LD_LIBRARY_PATH_ORIG", None)
+        if original is None:
+            env.pop("LD_LIBRARY_PATH", None)
+        else:
+            env["LD_LIBRARY_PATH"] = original
+    return env
+
+
 def _ejecutar(cmd: list[str]) -> str:
-    r = subprocess.run(cmd, capture_output=True, text=True, timeout=20)
+    r = subprocess.run(cmd, capture_output=True, text=True, timeout=20, env=entorno_sistema())
     if r.returncode != 0:
         raise RuntimeError((r.stderr or r.stdout or f"{cmd[0]} falló").strip())
     return r.stdout.strip()
@@ -373,7 +387,8 @@ def instalar(tema: Tema, reemplazar: bool = False) -> Tema:
     temporal.rename(destino)
     if tema.tiene_iconos and shutil.which("gtk-update-icon-cache"):
         try:
-            subprocess.run(["gtk-update-icon-cache", "-f", "-t", "-q", str(destino)], capture_output=True, timeout=120)
+            subprocess.run(["gtk-update-icon-cache", "-f", "-t", "-q", str(destino)], capture_output=True, timeout=120,
+                           env=entorno_sistema())
         except (OSError, subprocess.SubprocessError):
             pass
     nuevo = tema_en(destino)
@@ -395,7 +410,7 @@ def desinstalar(tema: Tema, papelera: bool = True) -> bool:
     if not es_del_usuario(tema):
         raise PermissionError("Solo se pueden eliminar los temas instalados en su carpeta personal.")
     if papelera and shutil.which("gio"):
-        r = subprocess.run(["gio", "trash", str(tema.carpeta)], capture_output=True, timeout=60)
+        r = subprocess.run(["gio", "trash", str(tema.carpeta)], capture_output=True, timeout=60, env=entorno_sistema())
         if r.returncode == 0 and not (tema.carpeta.exists() or tema.carpeta.is_symlink()):
             return True
     _borrar(tema.carpeta)

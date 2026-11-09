@@ -240,3 +240,20 @@ def test_url_con_espacios_y_tildes():
     assert u == "https://files.pling.com/api/files/download/j/abc.def/1440P%20No%20Logo%20G477.jpg"
     assert archivos.url_segura("https://x.org/a%20b/Montaña.png?n=1 2") == "https://x.org/a%20b/Monta%C3%B1a.png?n=1%202"
     assert archivos.url_segura("https://x.org/ya/bien.zip") == "https://x.org/ya/bien.zip"
+
+
+# --- programas del sistema desde el .deb -------------------------------------------------------
+def test_entorno_sistema_quita_las_librerias_del_paquete(monkeypatch):
+    monkeypatch.setattr(escritorio.sys, "frozen", True, raising=False)
+    monkeypatch.setenv("LD_LIBRARY_PATH", "/opt/estilo-agil/_internal")
+    monkeypatch.delenv("LD_LIBRARY_PATH_ORIG", raising=False)
+    assert "LD_LIBRARY_PATH" not in escritorio.entorno_sistema()
+    monkeypatch.setenv("LD_LIBRARY_PATH_ORIG", "/mis/libs")
+    env = escritorio.entorno_sistema()
+    assert env["LD_LIBRARY_PATH"] == "/mis/libs" and "LD_LIBRARY_PATH_ORIG" not in env
+
+
+def test_entorno_sistema_no_toca_nada_fuera_del_paquete(monkeypatch):
+    monkeypatch.delattr(escritorio.sys, "frozen", raising=False)
+    monkeypatch.setenv("LD_LIBRARY_PATH", "/mis/libs")
+    assert escritorio.entorno_sistema()["LD_LIBRARY_PATH"] == "/mis/libs"
